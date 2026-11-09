@@ -1,0 +1,12 @@
+# Dependencies and build output
+node_modules/
+dist/
+dist-ssr/
+
+# Local environment files in any directory (including server/)
+.env
+.env.*
+!.env.example
+
+# Logs
+*.log
