@@ -2,6 +2,11 @@ const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
 
+const jwtSecret = process.env.JWT_SECRET;
+if (!jwtSecret) {
+  throw new Error("JWT_SECRET is required");
+}
+
 const mysql = require("mysql2/promise");
 
 const pool = mysql.createPool({
@@ -11,6 +16,9 @@ const pool = mysql.createPool({
   password: process.env.DB_PASSWORD,
   database: process.env.DB_NAME,
 });
+
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
 
 const app = express();
 
@@ -111,6 +119,40 @@ app.delete("/tasks/:id", async (req, res) => {
     res.status(500).json({ error: "Failed to delete task" });
   }
 });
+
+app.post("/auth/login", async (req, res) => {
+  const { email, password } = req.body ?? {};
+
+  if (typeof email !== "string" || !email.trim() ||
+      typeof password !== "string" || !password) {
+    return res.status(400).json({ error: "Email and password are required" });
+  }
+
+  try {
+    const [rows] = await pool.execute(
+      "SELECT id, password_hash FROM users WHERE email = ?",
+      [email.trim()]
+    );
+
+    const user = rows[0];
+    if (!user || !(await bcrypt.compare(password, user.password_hash))) {
+      return res.status(401).json({ error: "Invalid email or password" });
+    }
+
+    const token = jwt.sign({}, jwtSecret, {
+      algorithm: "HS256",
+      subject: String(user.id),
+      expiresIn: "1h",
+    });
+
+    res.json({ token });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).json({ error: "Login failed" });
+  }
+});
+
+
 // insert above the routes
 
 app.listen(3000, () => {
