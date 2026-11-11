@@ -1,0 +1,32 @@
+server/
+├── server.js                         # Mounts routers and starts Express
+├── app/
+│   ├── config/
+│   │   └── env.js                    # Loads and validates environment variables
+│   ├── database/
+│   │   ├── mysql.js                  # Creates the shared MySQL connection pool
+│   │   └── migrations/
+│   │       ├── 001_initial.sql       # Creates the tasks table
+│   │       └── 002_create_users.sql  # Creates the users table
+│   ├── routes/
+│   │   ├── auth.routes.js            # Maps POST /auth/login
+│   │   └── tasks.routes.js           # Applies requireAuth and maps task CRUD routes
+│   ├── controllers/
+│   │   ├── auth.controller.js        # Validates login input and sends the response
+│   │   └── tasks.controller.js       # Validates task input and sends HTTP responses
+│   ├── dtos/
+│   │   ├── auth.dto.js               # Defines login input and token response shapes
+│   │   └── task.dto.js               # Defines create/update input and task response shapes
+│   ├── services/
+│   │   ├── auth.service.js           # Looks up users, checks passwords, and signs JWTs
+│   │   └── tasks.service.js          # Coordinates task operations through the task model
+│   ├── models/
+│   │   ├── user.model.js             # Queries MySQL for a user by email
+│   │   └── task.model.js             # Holds the SQL for task CRUD
+│   ├── middleware/
+│   │   └── requireAuth.js            # Verifies the Bearer JWT before task handlers run
+│   └── helpers/
+│       └── parsePositiveId.js        # Parses and checks task IDs for update and delete
+├── .env.example                      # Lists required variables with placeholder values
+├── .gitignore                        # Excludes .env and node_modules
+└── package.json                      # Declares dependencies and npm scripts

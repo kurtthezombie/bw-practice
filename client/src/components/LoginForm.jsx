@@ -16,6 +16,7 @@ export default function LoginForm() {
 
     try {
       const token = await login(form.get("email"), form.get("password"));
+      sessionStorage.setItem("authToken", token);
       dispatch(setToken(token));
     } catch (error) {
       setError(error.message);

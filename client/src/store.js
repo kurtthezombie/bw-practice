@@ -101,7 +101,7 @@ const tasksSlice = createSlice({
 
 const authSlice = createSlice({
   name: "auth",
-  initialState: { token: null },
+  initialState: { token: sessionStorage.getItem("authToken") },
   reducers: {
     setToken(state, action) {
       state.token = action.payload;
