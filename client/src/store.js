@@ -9,13 +9,17 @@ import {
 
 const API_URL = "http://localhost:3000/tasks";
 
-async function request(path = "", method = "GET", body) {
+async function request(token, path = "", method = "GET", body) {
+  const headers = { Authorization: `Bearer ${token}` };
+
+  if (body !== undefined) {
+    headers["Content-Type"] = "application/json";
+  }
+
   const response = await fetch(`${API_URL}${path}`, {
     method,
-    ...(body !== undefined && {
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
-    }),
+    headers,
+    body: body === undefined ? undefined : JSON.stringify(body),
   });
 
   if (!response.ok) {
@@ -30,28 +34,36 @@ async function request(path = "", method = "GET", body) {
 
 export const fetchTasks = createAsyncThunk(
   "tasks/fetch",
-  () => request(),
+  (_, { getState }) => request(getState().auth.token),
   {
-    condition: (_, { getState }) => !getState().tasks.loading,
+    condition: (_, { getState }) => {
+      const { auth, tasks } = getState();
+      return Boolean(auth.token) && !tasks.loading;
+    },
   }
 );
 
-export const createTask = createAsyncThunk("tasks/create", (title) =>
-  request("", "POST", { title })
+export const createTask = createAsyncThunk(
+  "tasks/create",
+  (title, { getState }) =>
+    request(getState().auth.token, "", "POST", { title })
 );
 
 export const updateTask = createAsyncThunk(
   "tasks/update",
-  async ({ id, completed }) => {
-    await request(`/${id}`, "PATCH", { completed });
+  async ({ id, completed }, { getState }) => {
+    await request(getState().auth.token, `/${id}`, "PATCH", { completed });
     return { id, completed: Number(completed) };
   }
 );
 
-export const deleteTask = createAsyncThunk("tasks/delete", async (id) => {
-  await request(`/${id}`, "DELETE");
-  return id;
-});
+export const deleteTask = createAsyncThunk(
+  "tasks/delete",
+  async (id, { getState }) => {
+    await request(getState().auth.token, `/${id}`, "DELETE");
+    return id;
+  }
+);
 
 const tasksSlice = createSlice({
   name: "tasks",
@@ -87,6 +99,21 @@ const tasksSlice = createSlice({
   },
 });
 
+const authSlice = createSlice({
+  name: "auth",
+  initialState: { token: null },
+  reducers: {
+    setToken(state, action) {
+      state.token = action.payload;
+    },
+  },
+});
+
+export const { setToken } = authSlice.actions;
+
 export const store = configureStore({
-  reducer: { tasks: tasksSlice.reducer },
+  reducer: {
+    tasks: tasksSlice.reducer,
+    auth: authSlice.reducer,
+  },
 });
