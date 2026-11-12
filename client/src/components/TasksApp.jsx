@@ -12,6 +12,7 @@ export default function TasksApp() {
   const dispatch = useDispatch();
   const { items, loading, error } = useSelector((state) => state.tasks);
   const [title, setTitle] = useState("");
+  const completedCount = items.filter((task) => task.completed).length;
 
   useEffect(() => {
     dispatch(fetchTasks());
@@ -42,6 +43,11 @@ export default function TasksApp() {
           Sign out
         </button>
         <h1 className="text-2xl">Tasks</h1>
+        {items.length > 0 && (
+          <p role="status">
+            {completedCount} of {items.length} completed · {items.length - completedCount} remaining
+          </p>
+        )}
 
         <form onSubmit={handleSubmit} className="flex items-center gap-2">
           <label htmlFor="title" className="text-md font-medium text-slate-700 flex align-center">
